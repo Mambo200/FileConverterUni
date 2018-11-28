@@ -5,29 +5,40 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:FileConverter"
         mc:Ignorable="d"
-        Title="File Converter" Height="200" Width="300" WindowStartupLocation="CenterScreen" ResizeMode="CanMinimize">
+        Title="Image Converter" Height="200" Width="300" WindowStartupLocation="CenterScreen" ResizeMode="CanMinimize">
     <Grid>
         <!-- Create Row Definitions -->
         <Grid.RowDefinitions>
             <RowDefinition Height="20"/>
             <RowDefinition Height="*"/>
-            <RowDefinition Height="30"/>
+            <RowDefinition Height="35"/>
         </Grid.RowDefinitions>
         <!-- Create Menu in first Row Definition -->
         <Menu Grid.Row="0">
             <!-- Menu Item File -->
             <MenuItem Header= "File">
-                <MenuItem Header="Set Save Directory and Type..."/>
-                <Separator/>
-                <MenuItem Header="Quit"/>
+                <MenuItem x:Name="Button_Quit" Header="Quit" Click="Button_Quit_Click"/>
             </MenuItem>
         </Menu>
         <Grid Grid.Row="1">
             <Button x:Name="Button_SelectFile" Content="File" HorizontalAlignment="Left" Height="25" Width="50" Margin="10,10,0,0" Click="Button_SelectFile_Click"/>
-            <Button x:Name="Button_SelectFolder" Content="Folder" HorizontalAlignment="Right" Height="25" Width="50" Margin="0,10,10,0"/>
+            <Button x:Name="Button_SelectFolder" Content="Folder" HorizontalAlignment="Right" Height="25" Width="50" Margin="0,10,10,0" Click="Button_SelectFolder_Click"/>
         </Grid>
-        <StatusBar Grid.Row="2">
-            <Label x:Name="Label_Staturbar" Content="Idle"/>
-        </StatusBar>
+        <Grid Grid.Row="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="120"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="60"/>
+            </Grid.ColumnDefinitions>
+            <StatusBar Grid.Row="2" Grid.Column="0">
+                <Label x:Name="Label_Staturbar" Content="Idle"/>
+            </StatusBar>
+            <StatusBar Grid.Row="2" Grid.Column="1">
+                <Label x:Name="Label_StatusCurrentFile" Content=""/>
+            </StatusBar>
+            <StatusBar Grid.Row="2" Grid.Column="2">
+                <Label x:Name="Label_StatusFileOfFile" Content=""/>
+            </StatusBar>
+        </Grid>
     </Grid>
 </Window>
