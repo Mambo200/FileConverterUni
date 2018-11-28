@@ -128,7 +128,9 @@ namespace FileConverter
                 Label_Staturbar.Content = "Failure, wrong index or extension";
                 return;
             }
-            
+
+            Label_Staturbar.Content = "Converting...";
+
             // save File
             SaveFile(filePath, savePath, saveImageFormat);
 
@@ -190,13 +192,18 @@ namespace FileConverter
             }
 
             // choose format
-            string format = Microsoft.VisualBasic.Interaction.InputBox("Format you want to save.\nExample:\nbmp\npng\ngif");
+            string format = Microsoft.VisualBasic.Interaction.InputBox("Format you want to save.\n" +
+                "Supported Formats:\n\n" +
+                "JPG || PNG || BMP || " +
+                "EMF || EXIF || GIF || " +
+                "ICON || TIFF || WMF || " +
+                "MEMORYBMP");
             saveImageFormat = ImageFormatToSave(format, 0);
 
             // check format
             if(saveImageFormat == null)
             {
-                Label_Staturbar.Content = "Failure, wrong format";
+                Label_Staturbar.Content = "Wrong format";
                 return;
             }
 
@@ -208,19 +215,11 @@ namespace FileConverter
                 // show saved images in status bar
                 System.Windows.Forms.Application.DoEvents();
 
-                string fileName = "";
                 DirectoryInfo d = new DirectoryInfo(files[i]);
-                
-                // get filename
-                foreach (char c in d.Name)
-                {
-                    if (c == '.')
-                    {
-                        break;
-                    }
 
-                    fileName += c;
-                }
+                // get filename
+                string fileName = GetFileName(files[i]);
+
                 Label_StatusCurrentFile.Content = fileName;
                 System.Windows.Forms.Application.DoEvents();
                 SaveFile(
@@ -330,12 +329,44 @@ namespace FileConverter
         /// <param name="_imageFormat">Image format</param>
         private void SaveFile(string _filePath, string _savePath, System.Drawing.Imaging.ImageFormat _imageFormat)
         {
-            // get image
-            System.Drawing.Image image = System.Drawing.Image.FromFile(_filePath);
-            // save image
-            image.Save(_savePath, _imageFormat);
-            // gibt Speicher frei
-            image.Dispose();
+            // if format is same as user wants only copy
+            if ((_filePath.ToLower()).EndsWith((_imageFormat.ToString()).ToLower()))
+            {
+                // copy file
+                File.Copy(_filePath, _savePath, true);
+            }
+            else
+            {
+                // get image
+                System.Drawing.Image image = System.Drawing.Image.FromFile(_filePath);
+                // check pixels of image
+                if(image.Height > 10000 || image.Width > 10000)
+                {
+                    image.Dispose();
+                    // set new save format
+                    string newSavePath = _savePath.TrimEnd(_imageFormat.ToString().ToArray());
+                    newSavePath += GetExtension(_filePath);
+
+                    // copy file
+                    File.Copy(_filePath, newSavePath, true);
+                    return;
+                }
+                // save image
+                image.Save(_savePath, _imageFormat);
+                // gibt Speicher frei
+                image.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// Get Extension of File
+        /// </summary>
+        /// <param name="_path">Path of File (NOT FOLDER!)</param>
+        /// <returns>extension with dot</returns>
+        private string GetExtension(string _path)
+        {
+            DirectoryInfo d = new DirectoryInfo(_path);
+            return d.Extension;
         }
 
         /// <summary>
@@ -361,6 +392,19 @@ namespace FileConverter
             return filesList.ToArray();
         }
 
+        /// <summary>
+        /// Get filename without extension
+        /// </summary>
+        /// <param name="_path">complete Path</param>
+        /// <returns>Filename without extension</returns>
+        private string GetFileName(string _path)
+        {
+            DirectoryInfo d = new DirectoryInfo(_path);
+            string fileName = d.Name;
+            fileName = d.Name.TrimEnd(d.Extension.ToCharArray());
 
+            return fileName;
+
+        }
     }
 }
