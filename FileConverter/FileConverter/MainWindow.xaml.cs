@@ -14,7 +14,6 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Drawing;
 using Microsoft.Win32;
-
 namespace FileConverter
 {
     /// <summary>
@@ -63,7 +62,7 @@ namespace FileConverter
 
         private void Button_SelectFile_Click(object sender, RoutedEventArgs e)
         {
-            Label_Staturbar.Content = "Select File...";
+            Label_Statusbar.Content = "Select File...";
 
             string filePath = "";
             string savePath = "";
@@ -71,11 +70,16 @@ namespace FileConverter
             string saveExtensionUser = "";
             System.Drawing.Imaging.ImageFormat saveImageFormat = null;
 
-            // select File
-            OpenFileDialog fileSelectionDialog = new OpenFileDialog();
-            // set filter
-            fileSelectionDialog.Filter = supportedPathFiles;
-            fileSelectionDialog.Multiselect = false;
+            // create select File dialog
+            OpenFileDialog fileSelectionDialog = new OpenFileDialog
+            {
+                // set filter
+                Filter = supportedPathFiles,
+                Multiselect = false
+            };
+
+
+
 
             // open file dialog
             if (fileSelectionDialog.ShowDialog() == true)
@@ -85,7 +89,7 @@ namespace FileConverter
                 if (!string.IsNullOrEmpty(temporaryInternetFilesDir) &&
                 fileSelectionDialog.FileName.StartsWith(temporaryInternetFilesDir, StringComparison.InvariantCultureIgnoreCase))
                 {
-                    Label_Staturbar.Content = "URLs are not supported";
+                    Label_Statusbar.Content = "URLs are not supported";
                     return;
                 }
                 filePath = fileSelectionDialog.FileName;
@@ -93,16 +97,18 @@ namespace FileConverter
             // cancel
             else
             {
-                Label_Staturbar.Content = "Idle";
+                Label_Statusbar.Content = "Idle";
                 return;
             }
 
-            // save File
-            SaveFileDialog saveSelectionDialog = new SaveFileDialog();
-            // set filter
-            saveSelectionDialog.Filter = supportedSaveFiles;
-            fileSelectionDialog.Multiselect = false;
-            saveSelectionDialog.AddExtension = false;
+            // create save File dialog
+            SaveFileDialog saveSelectionDialog = new SaveFileDialog
+            {
+                // set filter
+                Filter = supportedSaveFiles,
+                // user can choose own extension
+                AddExtension = false
+            };
 
             // open file dialog
             if (saveSelectionDialog.ShowDialog() == true)
@@ -115,7 +121,7 @@ namespace FileConverter
             // cancel
             else
             {
-                Label_Staturbar.Content = "Idle";
+                Label_Statusbar.Content = "Idle";
                 return;
             }
 
@@ -125,16 +131,16 @@ namespace FileConverter
             // check format
             if(saveImageFormat == null)
             {
-                Label_Staturbar.Content = "Failure, wrong index or extension";
+                Label_Statusbar.Content = "Failure, wrong index or extension";
                 return;
             }
 
-            Label_Staturbar.Content = "Converting...";
+            Label_Statusbar.Content = "Converting...";
 
             // save File
             SaveFile(filePath, savePath, saveImageFormat);
 
-            Label_Staturbar.Content = "Convert complete";
+            Label_Statusbar.Content = "Convert complete";
         }
 
         private void Button_SelectFolder_Click(object sender, RoutedEventArgs e)
@@ -150,7 +156,7 @@ namespace FileConverter
             fileSelectionDialog.Filter = supportedPathFiles;
             fileSelectionDialog.Multiselect = false;
 
-            Label_Staturbar.Content = "Choose Folder with images...";
+            Label_Statusbar.Content = "Image with folder...";
 
             // choose folder with images
             using (var fbd = new System.Windows.Forms.FolderBrowserDialog())
@@ -161,17 +167,37 @@ namespace FileConverter
                 if (result == System.Windows.Forms.DialogResult.OK && !string.IsNullOrWhiteSpace(fbd.SelectedPath))
                 {
                     folderPath = fbd.SelectedPath;
-                    files = GetAllPicturesPath(folderPath, SearchOption.TopDirectoryOnly);
+                    // top directory only or folder in folder
+                    System.Windows.Forms.DialogResult dialogResult = System.Windows.Forms.MessageBox.Show(
+                        "Only this folder (Yes) or Folder in Folder (No)?",
+                        "Search option",
+                        System.Windows.Forms.MessageBoxButtons.YesNoCancel
+                        );
+
+                    // save Searchoption
+                    SearchOption sOpt;
+                    if (dialogResult == System.Windows.Forms.DialogResult.Yes)
+                        sOpt = SearchOption.TopDirectoryOnly;
+                    else if (dialogResult == System.Windows.Forms.DialogResult.No)
+                        sOpt = SearchOption.AllDirectories;
+                    else
+                    {
+                        Label_Statusbar.Content = "Idle";
+                        return;
+                    }
+
+                    // search for files
+                    files = GetAllPicturesPath(folderPath, sOpt);
                 }
                 // if user canceled
                 else
                 {
-                    Label_Staturbar.Content = "Canceled";
+                    Label_Statusbar.Content = "Canceled";
                     return;
                 }
             }
 
-            Label_Staturbar.Content = "Choose Folder to save images...";
+            Label_Statusbar.Content = "Image save folder...";
 
             // choose folder to save images
             using (var fbd = new System.Windows.Forms.FolderBrowserDialog())
@@ -186,7 +212,7 @@ namespace FileConverter
                 // if user canceled
                 else
                 {
-                    Label_Staturbar.Content = "Canceled";
+                    Label_Statusbar.Content = "Canceled";
                     return;
                 }
             }
@@ -203,16 +229,18 @@ namespace FileConverter
             // check format
             if(saveImageFormat == null)
             {
-                Label_Staturbar.Content = "Wrong format";
+                Label_Statusbar.Content = "Wrong format";
                 return;
             }
 
-            Label_Staturbar.Content = "Converting...";
+            Label_Statusbar.Content = "Converting...";
+            
             // save files
             for (int i = 0; i < files.GetLength(0); i++)
             {
-                Label_StatusFileOfFile.Content = i + 1 + " of " + (files.GetLength(0) + 1).ToString();
                 // show saved images in status bar
+                Label_StatusFileOfFile.Content = i + 1 + " of " + (files.GetLength(0) + 1).ToString();
+                // refresh window 
                 System.Windows.Forms.Application.DoEvents();
 
                 DirectoryInfo d = new DirectoryInfo(files[i]);
@@ -229,7 +257,7 @@ namespace FileConverter
 
             }
 
-            Label_Staturbar.Content = "Complete";
+            Label_Statusbar.Content = "Complete";
             Label_StatusCurrentFile.Content = "";
             Label_StatusFileOfFile.Content = "";
         }
@@ -240,9 +268,29 @@ namespace FileConverter
         /// Get chosen Image Format from user (prefered) or index
         /// </summary>
         /// <param name="_userExtension">extension the User write</param>
-        /// <param name="_index">Extension index</param>
-        /// <returns></returns>
+        /// <param name="_index">Extension index from save dialog</param>
+        /// <returns>Image Format when corrent extension, null when no Format coule be found</returns>
         private System.Drawing.Imaging.ImageFormat ImageFormatToSave(string _userExtension, int _index)
+        {
+            System.Drawing.Imaging.ImageFormat imageFormat = null;
+
+            // get image format by user extension
+            imageFormat = ImageFormatToSave(_userExtension);
+
+            // check current image format
+            if (imageFormat == null)
+                // get image format by dialog index
+                imageFormat = ImageFormatToSave(_index);
+
+            return imageFormat;
+        }
+
+        /// <summary>
+        /// Get chosen Format from user
+        /// </summary>
+        /// <param name="_userExtension">extension the user write</param>
+        /// <returns>Image Format when corrent extension, null when no Format coule be found</returns>
+        private System.Drawing.Imaging.ImageFormat ImageFormatToSave(string _userExtension)
         {
             System.Drawing.Imaging.ImageFormat imageFormat = null;
 
@@ -281,46 +329,56 @@ namespace FileConverter
                 case "wmf":
                     imageFormat = System.Drawing.Imaging.ImageFormat.Wmf;
                     break;
-                default:
-                    // extension from index
-                    switch (_index)
-                    {
-                        case 1:
-                            imageFormat = System.Drawing.Imaging.ImageFormat.Bmp;
-                            break;
-                        case 2:
-                            imageFormat = System.Drawing.Imaging.ImageFormat.Emf;
-                            break;
-                        case 3:
-                            imageFormat = System.Drawing.Imaging.ImageFormat.Exif;
-                            break;
-                        case 4:
-                            imageFormat = System.Drawing.Imaging.ImageFormat.Gif;
-                            break;
-                        case 5:
-                            imageFormat = System.Drawing.Imaging.ImageFormat.Icon;
-                            break;
-                        case 6:
-                            imageFormat = System.Drawing.Imaging.ImageFormat.Jpeg;
-                            break;
-                        case 7:
-                            imageFormat = System.Drawing.Imaging.ImageFormat.MemoryBmp;
-                            break;
-                        case 8:
-                            imageFormat = System.Drawing.Imaging.ImageFormat.Png;
-                            break;
-                        case 9:
-                            imageFormat = System.Drawing.Imaging.ImageFormat.Tiff;
-                            break;
-                        case 10:
-                            imageFormat = System.Drawing.Imaging.ImageFormat.Wmf;
-                            break;
-                    }
-                    break;
             }
+
             return imageFormat;
         }
 
+        /// <summary>
+        /// Get chosen Format from index
+        /// </summary>
+        /// <param name="_index">Extension index from save dialog</param>
+        /// <returns>Image Format when corrent extension, null when no Format coule be found</returns>
+        private System.Drawing.Imaging.ImageFormat ImageFormatToSave(int _index)
+        {
+            System.Drawing.Imaging.ImageFormat imageFormat = null;
+
+            switch (_index)
+            {
+                case 1:
+                    imageFormat = System.Drawing.Imaging.ImageFormat.Bmp;
+                    break;
+                case 2:
+                    imageFormat = System.Drawing.Imaging.ImageFormat.Emf;
+                    break;
+                case 3:
+                    imageFormat = System.Drawing.Imaging.ImageFormat.Exif;
+                    break;
+                case 4:
+                    imageFormat = System.Drawing.Imaging.ImageFormat.Gif;
+                    break;
+                case 5:
+                    imageFormat = System.Drawing.Imaging.ImageFormat.Icon;
+                    break;
+                case 6:
+                    imageFormat = System.Drawing.Imaging.ImageFormat.Jpeg;
+                    break;
+                case 7:
+                    imageFormat = System.Drawing.Imaging.ImageFormat.MemoryBmp;
+                    break;
+                case 8:
+                    imageFormat = System.Drawing.Imaging.ImageFormat.Png;
+                    break;
+                case 9:
+                    imageFormat = System.Drawing.Imaging.ImageFormat.Tiff;
+                    break;
+                case 10:
+                    imageFormat = System.Drawing.Imaging.ImageFormat.Wmf;
+                    break;
+            }
+
+            return imageFormat;
+        }
         /// <summary>
         /// Save Image (System.Drawing)
         /// </summary>

@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:FileConverter"
         mc:Ignorable="d"
-        Title="Image Converter" Height="200" Width="300" WindowStartupLocation="CenterScreen" ResizeMode="CanMinimize">
+        Title="Image Converter" Height="200" Width="300" WindowStartupLocation="CenterScreen" ResizeMode="NoResize" MinWidth="300" MinHeight="200" WindowStyle="ToolWindow">
     <Grid>
         <!-- Create Row Definitions -->
         <Grid.RowDefinitions>
@@ -31,7 +31,7 @@
                 <ColumnDefinition Width="60"/>
             </Grid.ColumnDefinitions>
             <StatusBar Grid.Row="2" Grid.Column="0">
-                <Label x:Name="Label_Staturbar" Content="Idle"/>
+                <Label x:Name="Label_Statusbar" Content="Idle" FontSize="11"/>
             </StatusBar>
             <StatusBar Grid.Row="2" Grid.Column="1">
                 <Label x:Name="Label_StatusCurrentFile" Content=""/>
